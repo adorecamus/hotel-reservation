@@ -30,6 +30,23 @@ fun main() {
                 println("호텔 예약이 완료되었습니다.")
             }
 
+            2 -> {
+                println("호텔 예약 목록입니다.")
+                for (i in 0 until reservationHistory.size) {
+                    val reservation = reservationHistory[i]
+                    println("${i+1}. $reservation")
+                }
+            }
+
+            3 -> {
+                println("호텔 예약 목록입니다. (체크인 날짜순 정렬)")
+                val sortedHistory = reservationHistory.sortedBy { it.checkIn }
+                for (i in 0 until sortedHistory.size) {
+                    val reservation = sortedHistory[i]
+                    println("${i+1}. $reservation")
+                }
+            }
+
             4 -> {
                 println("프로그램을 종료합니다")
                 break

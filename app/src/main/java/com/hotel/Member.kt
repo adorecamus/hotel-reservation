@@ -1,7 +1,7 @@
 package com.hotel
 
 class Member {
-    private var name: String
+    val name: String
     private var balance: Long
 
     constructor(_name: String, _balance: Long) {
