@@ -19,11 +19,13 @@ fun main() {
                 val roomNumber = validateInput("roomNumber").toString().toInt()
                 val date = validateDate(roomNumber, reservationHistory).toList()
 
-                val member = Member(name, balance)
+                val member = Member(name, Account())
+                member.account.deposit(balance)
                 memberList.add(member)
 
                 val reservation = Reservation(member, roomNumber, date[0], date[1], expense)
-                if(!member.withdraw(expense)) {
+                if(!member.account.withdraw(expense)) {
+                    println("잔액이 부족합니다.")
                     continue
                 }
                 reservationHistory.add(reservation)
@@ -50,6 +52,20 @@ fun main() {
             4 -> {
                 println("프로그램을 종료합니다")
                 break
+            }
+
+            5 -> {
+                val name = validateInput("name").toString()
+                var memberName: String? = null
+                for (member in memberList) {
+                    if (name == member.name) {
+                        memberName = name
+                        member.account.printTransactionHistory()
+                    }
+                }
+                if (memberName == null) {
+                    println("예약된 사용자를 찾을 수 없습니다.")
+                }
             }
 
         }
@@ -158,11 +174,6 @@ fun validateDate(roomNumber: Int, reservationHistory: ArrayList<Reservation>): P
                 continue
             }
             for (room in reservedRooms) {
-                // 앞서 입력체크인이 예약체크인과 예약체크아웃 사이에 없음을 검증한 상태임
-                // 또 입력체크아웃은 입력체크인 이후임을 검증함
-                // 따라서 입력체크아웃은 예약체크인과 예약체크아웃 사이에 없음 (검증 필요없음)
-                // 입력체크인이 예약체크인보다 먼저인 경우에는 입력체크아웃이 예약체크인과 같거나 전이어야 함
-                // 입력체크인이 예약체크아웃보다 후인 경우는 검증 필요없음
                 if (checkIn.isBefore(room.checkIn) && tempCheckOut.isAfter(room.checkIn)) {
                     println("해당 날짜에 이미 방을 사용 중입니다. 다른 날짜를 입력해주세요.")
                     isAvailable = false

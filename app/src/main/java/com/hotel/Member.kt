@@ -2,19 +2,10 @@ package com.hotel
 
 class Member {
     val name: String
-    private var balance: Long
+    val account: Account
 
-    constructor(_name: String, _balance: Long) {
+    constructor(_name: String, _account: Account) {
         name = _name
-        balance = _balance
-    }
-
-    fun withdraw(amount: Long): Boolean {
-        if (balance >= amount) {
-            balance -= amount
-            return true
-        }
-        println("잔액이 부족합니다.")
-        return false
+        account = _account
     }
 }
