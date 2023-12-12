@@ -4,8 +4,8 @@ class Member {
     val name: String
     val account: Account
 
-    constructor(_name: String, _account: Account) {
+    constructor(_name: String) {
         name = _name
-        account = _account
+        account = Account()
     }
 }

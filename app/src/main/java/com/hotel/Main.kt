@@ -17,9 +17,10 @@ fun main() {
 
                 val name = validateInput("name").toString()
                 val roomNumber = validateInput("roomNumber").toString().toInt()
-                val date = validateDate(roomNumber, reservationHistory).toList()
+                val reservedRooms = reservationHistory.filter{ it.roomNumber == roomNumber}
+                val date = validateDate(reservedRooms).toList()
 
-                val member = Member(name, Account())
+                val member = Member(name)
                 member.account.deposit(balance)
                 memberList.add(member)
 
@@ -35,8 +36,7 @@ fun main() {
             2 -> {
                 println("호텔 예약 목록입니다.")
                 for (i in 0 until reservationHistory.size) {
-                    val reservation = reservationHistory[i]
-                    println("${i+1}. $reservation")
+                    println("${i+1}. ${reservationHistory[i]}")
                 }
             }
 
@@ -44,8 +44,7 @@ fun main() {
                 println("호텔 예약 목록입니다. (체크인 날짜순 정렬)")
                 val sortedHistory = reservationHistory.sortedBy { it.checkIn }
                 for (i in 0 until sortedHistory.size) {
-                    val reservation = sortedHistory[i]
-                    println("${i+1}. $reservation")
+                    println("${i+1}. ${sortedHistory[i]}")
                 }
             }
 
@@ -65,6 +64,59 @@ fun main() {
                 }
                 if (memberName == null) {
                     println("예약된 사용자를 찾을 수 없습니다.")
+                }
+            }
+
+            6 -> {
+                var isCompleted = false
+                while (!isCompleted) {
+                    val name = validateInput("name").toString()
+                    val memberReservation = reservationHistory.filter{ it.member.name == name }
+                    if (memberReservation.size == 0) {
+                        println("사용자 이름으로 예약된 목록을 찾을 수 없습니다.")
+                        continue
+                    }
+                    while (true) {
+                        println("$name 님이 예약한 목록입니다. 변경/취소하실 예약번호를 입력해주세요. (종료는 q 입력)")
+                        for (i in 0 until memberReservation.size) {
+                            println("${i+1}. ${memberReservation[i]}")
+                        }
+                        try {
+                            var originReservationNumber = readln()
+                            if (originReservationNumber == "q") {
+                                isCompleted = true
+                                break
+                            }
+                            val reservationNumber = originReservationNumber.toInt()
+                            if (reservationNumber > memberReservation.size || reservationNumber < 1) {
+                                println("범위에 없는 예약번호입니다.")
+                                continue
+                            }
+                            val selectedRoom = memberReservation[reservationNumber-1]
+                            println("해당 예약을 어떻게 하시겠어요? 1. 변경 2. 취소 / 이외 번호 입력 시 이전으로 돌아갑니다.")
+                            var originNumber = readln()
+                            val number = originNumber.toInt()
+                            when (number) {
+                                1 -> {
+                                    val reservedRooms = reservationHistory.filter { it.roomNumber == selectedRoom.roomNumber
+                                            && it.checkIn != selectedRoom.checkIn }
+                                    val date = validateDate(reservedRooms).toList()
+                                    selectedRoom.changeReservation(date[0], date[1])
+                                    println("예약이 변경되었습니다.")
+                                }
+
+                                2 -> {
+
+                                }
+
+                                else -> {
+                                    continue
+                                }
+                            }
+                        } catch (e: Exception) {
+                            println("잘못된 입력입니다.")
+                        }
+                    }
                 }
             }
 
@@ -125,10 +177,7 @@ fun validateInput(type: String): Any? {
     }
 }
 
-fun validateDate(roomNumber: Int, reservationHistory: ArrayList<Reservation>): Pair<LocalDate, LocalDate> {
-
-    val reservedRooms = reservationHistory.filter{ it.roomNumber == roomNumber}
-
+fun validateDate(reservedRooms: List<Reservation>): Pair<LocalDate, LocalDate> {
     val formatter = DateTimeFormatter.BASIC_ISO_DATE
     val today: LocalDate = LocalDate.now()
 
@@ -136,7 +185,7 @@ fun validateDate(roomNumber: Int, reservationHistory: ArrayList<Reservation>): P
     var checkIn: LocalDate
     while (true) {
         isAvailable = true
-        println("체크인 날짜를 입력해주세요. 표기형식:20231208")
+        println("체크인 날짜를 입력해주세요. 표기형식:${today.format(formatter)}")
         try {
             var originCheckIn = readln()
             val tempCheckIn: LocalDate = LocalDate.parse(originCheckIn, formatter)
