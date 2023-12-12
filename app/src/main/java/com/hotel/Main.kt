@@ -20,9 +20,12 @@ fun main() {
                 val reservedRooms = reservationHistory.filter{ it.roomNumber == roomNumber}
                 val date = validateDate(reservedRooms).toList()
 
-                val member = Member(name)
-                member.account.deposit(balance)
-                memberList.add(member)
+                var member = memberList.find { it.name == name }
+                if (member == null) {
+                    member = Member(name)
+                    member.account.deposit(balance)
+                    memberList.add(member)
+                }
 
                 val reservation = Reservation(member, roomNumber, date[0], date[1], expense)
                 if(!member.account.withdraw(expense)) {
