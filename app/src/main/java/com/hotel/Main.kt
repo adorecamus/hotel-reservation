@@ -2,6 +2,7 @@ package com.hotel
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 fun main() {
     val memberList = ArrayList<Member>()
@@ -17,7 +18,7 @@ fun main() {
 
                 val name = validateInput("name").toString()
                 val roomNumber = validateInput("roomNumber").toString().toInt()
-                val reservedRooms = reservationHistory.filter{ it.roomNumber == roomNumber}
+                val reservedRooms = reservationHistory.filter { it.roomNumber == roomNumber }
                 val date = validateDate(reservedRooms).toList()
 
                 var member = memberList.find { it.name == name }
@@ -28,7 +29,7 @@ fun main() {
                 }
 
                 val reservation = Reservation(member, roomNumber, date[0], date[1], expense)
-                if(!member.account.withdraw(expense)) {
+                if (!member.account.withdraw(expense)) {
                     println("잔액이 부족합니다.")
                     continue
                 }
@@ -39,7 +40,7 @@ fun main() {
             2 -> {
                 println("호텔 예약 목록입니다.")
                 for (i in 0 until reservationHistory.size) {
-                    println("${i+1}. ${reservationHistory[i]}")
+                    println("${i + 1}. ${reservationHistory[i]}")
                 }
             }
 
@@ -47,7 +48,7 @@ fun main() {
                 println("호텔 예약 목록입니다. (체크인 날짜순 정렬)")
                 val sortedHistory = reservationHistory.sortedBy { it.checkIn }
                 for (i in 0 until sortedHistory.size) {
-                    println("${i+1}. ${sortedHistory[i]}")
+                    println("${i + 1}. ${sortedHistory[i]}")
                 }
             }
 
@@ -74,7 +75,7 @@ fun main() {
                 var isCompleted = false
                 while (!isCompleted) {
                     val name = validateInput("name").toString()
-                    val memberReservation = reservationHistory.filter{ it.member.name == name }
+                    val memberReservation = reservationHistory.filter { it.member.name == name }
                     if (memberReservation.size == 0) {
                         println("사용자 이름으로 예약된 목록을 찾을 수 없습니다.")
                         continue
@@ -82,7 +83,7 @@ fun main() {
                     while (true) {
                         println("$name 님이 예약한 목록입니다. 변경/취소하실 예약번호를 입력해주세요. (종료는 q 입력)")
                         for (i in 0 until memberReservation.size) {
-                            println("${i+1}. ${memberReservation[i]}")
+                            println("${i + 1}. ${memberReservation[i]}")
                         }
                         try {
                             var originReservationNumber = readln()
@@ -95,21 +96,50 @@ fun main() {
                                 println("범위에 없는 예약번호입니다.")
                                 continue
                             }
-                            val selectedRoom = memberReservation[reservationNumber-1]
+                            val selectedRoom = memberReservation[reservationNumber - 1]
                             println("해당 예약을 어떻게 하시겠어요? 1. 변경 2. 취소 / 이외 번호 입력 시 이전으로 돌아갑니다.")
                             var originNumber = readln()
                             val number = originNumber.toInt()
                             when (number) {
                                 1 -> {
-                                    val reservedRooms = reservationHistory.filter { it.roomNumber == selectedRoom.roomNumber
-                                            && it.checkIn != selectedRoom.checkIn }
+                                    val reservedRooms = reservationHistory.filter {
+                                        it.roomNumber == selectedRoom.roomNumber
+                                                && it.checkIn != selectedRoom.checkIn
+                                    }
                                     val date = validateDate(reservedRooms).toList()
                                     selectedRoom.changeReservation(date[0], date[1])
                                     println("예약이 변경되었습니다.")
                                 }
 
                                 2 -> {
+                                    println("[취소 유의사항]")
+                                    println("1. 체크인 14일 전까지 예약금의 100% 환불")
+                                    println("2. 체크인 7일 전까지 예약금의 80% 환불")
+                                    println("3. 체크인 5일 전까지 예약금의 50% 환불")
+                                    println("4. 체크인 3일 전까지 예약금의 30% 환불")
+                                    println("5. 이후 예약금 환불 불가")
 
+                                    val member = memberList.find { it.name == name }
+                                    val difference = ChronoUnit.DAYS.between(
+                                        LocalDate.now(),
+                                        selectedRoom.checkIn
+                                    )
+                                    var returnRatio: Double = 0.0
+                                    if (difference < 3) {
+                                        println("예약금 환불이 불가합니다.")
+                                        continue
+                                    } else if (difference < 5) {
+                                        returnRatio = 0.3
+                                    } else if (difference < 7) {
+                                        returnRatio = 0.5
+                                    } else if (difference < 14) {
+                                        returnRatio = 0.8
+                                    } else {
+                                        returnRatio = 1.0
+                                    }
+                                    member!!.account.deposit((selectedRoom.expense * returnRatio).toLong())
+                                    println("${(selectedRoom.expense * returnRatio).toLong()}원이 환불되었습니다.")
+                                    reservationHistory.remove(selectedRoom)
                                 }
 
                                 else -> {
@@ -217,7 +247,7 @@ fun validateDate(reservedRooms: List<Reservation>): Pair<LocalDate, LocalDate> {
     var checkOut: LocalDate
     while (true) {
         isAvailable = true
-        println("체크아웃 날짜를 입력해주세요. 표기형식:20231208")
+        println("체크아웃 날짜를 입력해주세요. 표기형식:${today.format(formatter)}")
         try {
             var originCheckOut = readln()
             val tempCheckOut = LocalDate.parse(originCheckOut, formatter)
